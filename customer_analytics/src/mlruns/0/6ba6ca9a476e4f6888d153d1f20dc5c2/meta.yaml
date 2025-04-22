@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/User/Desktop/proje2/customer_analytics/src/mlruns/0/6ba6ca9a476e4f6888d153d1f20dc5c2/artifacts
+end_time: 1744965409197
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 6ba6ca9a476e4f6888d153d1f20dc5c2
+run_name: popular-loon-408
+run_uuid: 6ba6ca9a476e4f6888d153d1f20dc5c2
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1744965407171
+status: 3
+tags: []
+user_id: User
