@@ -14,6 +14,7 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./data:/opt/airflow/data
     - ./src:/opt/airflow/src
+    - ./models:/opt/airflow/models
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     - postgres
@@ -51,6 +52,7 @@ services:
     volumes:
       - ./src:/app
       - ./dags:/app/dags
+      - ./data:/opt/airflow/data
 
 volumes:
   postgres-db-volume: {}

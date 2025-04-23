@@ -20,7 +20,7 @@ class CustomerAnalytics:
         self.label_encoders = {}
         self.kmeans_model = None
         self.sales_model = None
-        self.model_path = "../models/sales_prediction_model.joblib"
+        self.model_path = '/opt/airflow/models/sales_prediction_model.joblib'
         
     def _setup_logger(self):
         logging.basicConfig(
@@ -40,20 +40,11 @@ class CustomerAnalytics:
             raise
 
     def preprocess_data(self):
-        """Veri ön işleme adımları"""
-        try:
-            # Eksik değerleri doldur
-            self.data = self.data.fillna(self.data.mean())
-            
-            # Kategorik değişkenleri dönüştür
-            cat_columns = self.data.select_dtypes(include=['object']).columns
-            self.data = pd.get_dummies(self.data, columns=cat_columns)
-            
-            self.logger.info("Veri ön işleme tamamlandı")
-            return self.data
-        except Exception as e:
-            self.logger.error(f"Veri ön işleme hatası: {str(e)}")
-            raise
+        """Veri ön işleme işlemleri"""
+        if not hasattr(self, 'data') or self.data is None:
+            raise ValueError("Veri yüklenmeden ön işleme yapılamaz.")
+        self.data = self.data.fillna(self.data.mean())
+        self.logger.info("Veri ön işleme tamamlandı.")
 
     def perform_customer_segmentation(self, n_clusters=4):
         """Müşteri segmentasyonu gerçekleştir"""
@@ -316,4 +307,4 @@ if __name__ == "__main__":
     analyzer.preprocess_data()
     analyzer.perform_customer_segmentation()
     analyzer.train_sales_prediction_model(analyzer.data)
-    analyzer.create_visualizations() 
+    analyzer.create_visualizations()
