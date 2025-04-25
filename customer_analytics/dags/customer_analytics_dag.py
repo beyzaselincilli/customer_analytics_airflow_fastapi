@@ -3,6 +3,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 from customer_analysis import CustomerAnalytics
 import pandas as pd
+import os
 
 # CustomerAnalytics sınıfını başlat
 analyzer = CustomerAnalytics()
@@ -88,7 +89,10 @@ with DAG(
         analyzer.data = data
 
         # Satış tahmin modelini eğit
-        analyzer.train_sales_prediction_model(analyzer.data)
+        predictions = analyzer.train_sales_prediction_model(analyzer.data)
+
+        # Tahminleri XCom ile paylaş
+        kwargs['ti'].xcom_push(key='predictions', value=predictions)
 
     # Airflow görevleri
     load_data = PythonOperator(

@@ -20,7 +20,12 @@ class PredictionRequest(BaseModel):
 async def load_data(data_file: DataFile):
     """Veri setini yükler ve temel temizleme işlemlerini gerçekleştirir."""
     try:
+        import os
+        if not os.path.exists(data_file.filepath):
+            raise HTTPException(status_code=400, detail=f"Dosya bulunamadı: {data_file.filepath}")
+        
         data = analyzer.load_data(data_file.filepath)
+        print(f"Yüklenen Veri: {data.head()}")  # Veriyi logla
         return {"message": "Veri başarıyla yüklendi", "shape": data.shape}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Veri yükleme hatası: {str(e)}")
@@ -29,9 +34,12 @@ async def load_data(data_file: DataFile):
 async def preprocess_data():
     """Veriyi ön işler."""
     try:
+        print("Preprocess işlemi başlatıldı.")  # İşlem başlangıcını logla
         data = analyzer.preprocess_data()
+        print(f"Ön işlenen veri sütunları: {list(data.columns)}")  # Sütunları logla
         return {"message": "Veri ön işleme tamamlandı", "columns": list(data.columns)}
     except Exception as e:
+        print(f"Preprocess Data Hatası: {str(e)}")  # Hata mesajını logla
         raise HTTPException(status_code=500, detail=f"Veri ön işleme hatası: {str(e)}")
 
 @app.post("/segment-customers/")
@@ -65,3 +73,8 @@ async def predict_sales(request: PredictionRequest):
 async def root():
     """API'nin çalıştığını doğrulamak için basit bir endpoint."""
     return {"message": "Customer Analytics API çalışıyor!"}
+
+# Example data file for testing
+example_data_file = {
+    "filepath": "/opt/airflow/data/enterprise_customer_data.csv"
+}
