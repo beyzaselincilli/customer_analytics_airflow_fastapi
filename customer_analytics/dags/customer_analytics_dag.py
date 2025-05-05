@@ -3,7 +3,6 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 from customer_analysis import CustomerAnalytics
 import pandas as pd
-import os
 
 # CustomerAnalytics sınıfını başlat
 analyzer = CustomerAnalytics()
@@ -28,16 +27,15 @@ with DAG(
     catchup=False,
 ) as dag:
 
-    def load_data_task(**kwargs):
-        """Veri yükleme işlemi."""
-        data = analyzer.load_data('/opt/airflow/data/enterprise_customer_data.csv')
-        # XCom ile veriyi paylaş
-        kwargs['ti'].xcom_push(key='data', value=data.to_dict())
+    def fetch_data_from_mongo_task(**kwargs):
+        """MongoDB'den veri çekme işlemi."""
+        data = analyzer.fetch_data_from_mongo()  # MongoDB'den veriyi çek
+        kwargs['ti'].xcom_push(key='data', value=data.to_dict())  # Veriyi XCom ile paylaş
 
     def preprocess_data_task(**kwargs):
         """Veri ön işleme işlemi."""
         # XCom'dan veriyi al
-        data_dict = kwargs['ti'].xcom_pull(key='data', task_ids='load_data')
+        data_dict = kwargs['ti'].xcom_pull(key='data', task_ids='fetch_data_from_mongo')
         if data_dict is None:
             raise ValueError("Veri yüklenmeden ön işleme yapılamaz.")
         
@@ -95,9 +93,9 @@ with DAG(
         kwargs['ti'].xcom_push(key='predictions', value=predictions)
 
     # Airflow görevleri
-    load_data = PythonOperator(
-        task_id='load_data',
-        python_callable=load_data_task,
+    fetch_data_from_mongo = PythonOperator(
+        task_id='fetch_data_from_mongo',
+        python_callable=fetch_data_from_mongo_task,
         provide_context=True,
         dag=dag,
     )
@@ -124,4 +122,4 @@ with DAG(
     )
 
     # Görev sıralaması
-    load_data >> preprocess_data >> segment_customers >> train_sales_model
+    fetch_data_from_mongo >> preprocess_data >> segment_customers >> train_sales_model

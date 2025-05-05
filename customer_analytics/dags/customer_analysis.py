@@ -12,6 +12,7 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import joblib
 import os
+from pymongo import MongoClient
 
 class CustomerAnalytics:
     def __init__(self):
@@ -21,6 +22,14 @@ class CustomerAnalytics:
         self.kmeans_model = None
         self.sales_model = None
         self.model_path = '/opt/airflow/models/sales_prediction_model.joblib'
+
+        # MongoDB bağlantısı
+        mongo_uri = os.environ.get("MONGO_URI", "")
+        if not mongo_uri:
+            raise ValueError("MONGO_URI ortam değişkeni tanımlı değil.")
+        self.mongo_client = MongoClient(mongo_uri)
+        self.db = self.mongo_client["customer_analytics"]  # Veritabanı adı
+        self.collection = self.db["customers"]  # Koleksiyon adı
         
     def _setup_logger(self):
         logging.basicConfig(
@@ -300,10 +309,33 @@ class CustomerAnalytics:
             self.logger.error(f"Görselleştirme hatası: {str(e)}")
             raise
 
+    def upload_csv_to_mongo(self, csv_filepath):
+        """CSV dosyasını MongoDB'ye yükler."""
+        try:
+            data = pd.read_csv(csv_filepath)
+            self.collection.delete_many({})  # Eski verileri temizle
+            self.collection.insert_many(data.to_dict("records"))
+            self.logger.info(f"{len(data)} kayıt MongoDB'ye yüklendi.")
+        except Exception as e:
+            self.logger.error(f"Veri yükleme hatası: {str(e)}")
+            raise
+
+    def fetch_data_from_mongo(self):
+        """MongoDB'den veriyi çeker ve bir DataFrame olarak döner."""
+        try:
+            data = list(self.collection.find())
+            df = pd.DataFrame(data)
+            if '_id' in df.columns:
+                df = df.drop(columns=['_id'])  # MongoDB'nin otomatik eklediği '_id' sütununu kaldır
+            self.logger.info(f"{len(df)} kayıt MongoDB'den çekildi.")
+            return df
+        except Exception as e:
+            self.logger.error(f"Veri çekme hatası: {str(e)}")
+            raise
+
 if __name__ == "__main__":
     analyzer = CustomerAnalytics()
-    # Örnek kullanım
-    analyzer.load_data("data/customer_data.csv")
+    analyzer.data = analyzer.fetch_data_from_mongo()  # Veriyi MongoDB'den çek
     analyzer.preprocess_data()
     analyzer.perform_customer_segmentation()
     analyzer.train_sales_prediction_model(analyzer.data)

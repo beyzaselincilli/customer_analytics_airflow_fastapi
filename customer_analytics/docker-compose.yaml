@@ -47,12 +47,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.fastapi
+    environment:
+      - MONGO_URI=
     ports:
       - "8000:8000"
-    volumes:
-      - ./src:/app
-      - ./dags:/app/dags
-      - ./data:/opt/airflow/data
 
 volumes:
   postgres-db-volume: {}
