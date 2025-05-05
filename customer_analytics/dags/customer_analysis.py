@@ -24,7 +24,7 @@ class CustomerAnalytics:
         self.model_path = '/opt/airflow/models/sales_prediction_model.joblib'
 
         # MongoDB bağlantısı
-        mongo_uri = os.environ.get("MONGO_URI", "")
+        mongo_uri = os.environ.get("MONGO_URI", "mongodb+srv://beyzaselincilli:Beyza195214@cluster0.xwjqiyq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
         if not mongo_uri:
             raise ValueError("MONGO_URI ortam değişkeni tanımlı değil.")
         self.mongo_client = MongoClient(mongo_uri)

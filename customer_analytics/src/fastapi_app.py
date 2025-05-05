@@ -8,27 +8,19 @@ app = FastAPI(title="Customer Analytics API", description="Müşteri analitiği 
 # CustomerAnalytics sınıfını başlat
 analyzer = CustomerAnalytics()
 
-# Veri yükleme modeli
-class DataFile(BaseModel):
-    filepath: str
-
 # Tahmin isteği modeli
 class PredictionRequest(BaseModel):
     months_ahead: int
 
-@app.post("/load-data/")
-async def load_data(data_file: DataFile):
-    """Veri setini yükler ve temel temizleme işlemlerini gerçekleştirir."""
+@app.post("/fetch-data/")
+async def fetch_data():
+    """MongoDB'den veriyi çeker."""
     try:
-        import os
-        if not os.path.exists(data_file.filepath):
-            raise HTTPException(status_code=400, detail=f"Dosya bulunamadı: {data_file.filepath}")
-        
-        data = analyzer.load_data(data_file.filepath)
-        print(f"Yüklenen Veri: {data.head()}")  # Veriyi logla
-        return {"message": "Veri başarıyla yüklendi", "shape": data.shape}
+        data = analyzer.fetch_data_from_mongo()
+        analyzer.data = data  # Veriyi sınıfın data özelliğine ata
+        return {"message": "Veri başarıyla MongoDB'den çekildi", "shape": data.shape}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Veri yükleme hatası: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Veri çekme hatası: {str(e)}")
 
 @app.post("/preprocess-data/")
 async def preprocess_data():

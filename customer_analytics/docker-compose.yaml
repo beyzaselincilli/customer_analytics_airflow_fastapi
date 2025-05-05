@@ -48,7 +48,7 @@ services:
       context: .
       dockerfile: Dockerfile.fastapi
     environment:
-      - MONGO_URI=
+      - MONGO_URI=mongodb+srv://beyzaselincilli:Beyza195214@cluster0.xwjqiyq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
     ports:
       - "8000:8000"
 
